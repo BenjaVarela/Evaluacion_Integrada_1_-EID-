@@ -1,661 +1,392 @@
-# ============================================================
-# DEMO DE CUSTOMTKINTER + MATPLOTLIB
-# Tema: Secciones cónicas
-# Autor: Franco Oyarzo Calisto
-# ============================================================
-#
-# Esta aplicación tiene como objetivo enseñar:
-# 1. Cómo crear una ventana con CustomTkinter.
-# 2. Cómo usar pestañas con CTkTabview.
-# 3. Cómo capturar datos ingresados por el usuario.
-# 4. Cómo validar entradas numéricas.
-# 5. Cómo mostrar procedimientos paso a paso.
-# 6. Cómo incrustar gráficos de Matplotlib dentro de CustomTkinter.
-#
-# Cónicas incluidas:
-# - Circunferencia
-# - Elipse
-# - Parábola
-# - Hipérbola
-#
-# Instalación necesaria:
-# pip install customtkinter matplotlib
-#
-# Considere lo siguiente, esto es solo un EJEMPLO de como utilizar CustomTKinter
-# Juegue con el codigo, rompalo, etc, pero entienda como usar todos los conceptos de CTK
-# ============================================================
-
 import customtkinter as ctk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import math
-
-
-# ============================================================
-# CLASE PRINCIPAL DE LA APLICACIÓN
-# ============================================================
-# En CustomTkinter, una aplicación normalmente se construye
-# creando una clase que hereda de ctk.CTk.
-#
-# ctk.CTk funciona como la ventana principal del programa.
-# ============================================================
+from matplotlib.ticker import MultipleLocator
+import sympy as sp
 
 class App(ctk.CTk):
 
     def __init__(self):
         super().__init__()
-
-        # Configuración básica de la ventana.
-        self.title("Demo CustomTkinter - Secciones Cónicas")
+        self.title("Calculadora de Límites")
         self.geometry("1200x720")
-
-        # Apariencia visual de la aplicación.
-        ctk.set_appearance_mode("red")
+        ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
-
-        # Permite que la ventana se adapte al tamaño disponible.
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # CTkTabview permite crear pestañas.
         self.tabs = ctk.CTkTabview(self)
         self.tabs.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        # Creación de pestañas.
         self.tab_inicio = self.tabs.add("Inicio")
-        self.tab_circunferencia = self.tabs.add("Limites")
-        self.tab_elipse = self.tabs.add("Elipse")
-        self.tab_parabola = self.tabs.add("Parábola")
-        self.tab_hiperbola = self.tabs.add("Hipérbola")
+        self.tab_infinito = self.tabs.add("Límites al Infinito")
+        self.tab_trig = self.tabs.add("Trigonométricos")
+        self.tab_laterales = self.tabs.add("Límites Laterales")
+        self.tab_tend_inf = self.tabs.add("Tendencia Infinita")
+        self.tab_radicales = self.tabs.add("Con Radicales")
+        self.tab_algebraicos = self.tabs.add("Límites Algebraicos")
 
-        # Llamamos a los métodos que construyen cada pestaña.
         self.crear_inicio()
-        self.crear_circunferencia()
-        self.crear_elipse()
-        self.crear_parabola()
-        self.crear_hiperbola()
-
-    # ========================================================
-    # PESTAÑA DE INICIO
-    # ========================================================
+        self.crear_pestana_infinito()
+        self.crear_pestana_trig()
+        self.crear_pestana_laterales()
+        self.crear_pestana_tend_inf()
+        self.crear_pestana_radicales()
+        self.crear_pestana_algebraicos()
 
     def crear_inicio(self):
-        titulo = ctk.CTkLabel(
-            self.tab_inicio,
-            text="Calculadora de Límites",
-            font=("Calibri", 50, "bold")
-        )
+        titulo = ctk.CTkLabel(self.tab_inicio, text="Calculadora de Límites", font=("Calibri", 46, "bold"))
         titulo.pack(pady=25)
-
-        texto = """
-Esta aplicación es una base para que estudiantes de primer año aprendan a usar CustomTkinter.
-
-La idea es construir una interfaz parecida a un GeoGebra pequeño, pero más simple.
-En este ejemplo se trabajan secciones cónicas: circunferencia, elipse, parábola e hipérbola.
-
-Cada pestaña permite ingresar datos, graficar la figura y ver el procedimiento paso por paso.
-
-La misma estructura puede usarse más adelante para límites:
-- ingresar una función
-- calcular límite
-- graficar la función
-- mostrar desarrollo paso a paso
-- pedir interpretación al estudiante
-"""
-
-        caja = ctk.CTkTextbox(self.tab_inicio, width=900, height=350, font=("Arial", 16))
+        texto_bienvenida = ("Bienvenido al Analizador y Visualizador de Límites.")
+        caja = ctk.CTkTextbox(self.tab_inicio, width=900, height=150, font=("Arial", 16))
         caja.pack(pady=20)
-        caja.insert("1.0", texto)
+        caja.insert("1.0", texto_bienvenida)
         caja.configure(state="disabled")
-
-    # ========================================================
-    # FUNCIÓN AUXILIAR PARA CREAR FIGURAS DE MATPLOTLIB
-    # ========================================================
-    # Esta función evita repetir código.
-    # Crea una figura, un eje y un canvas para incrustar
-    # el gráfico dentro de un frame de CustomTkinter.
-    # ========================================================
 
     def crear_canvas(self, frame):
         figura = Figure(figsize=(6, 5), dpi=100)
         eje = figura.add_subplot(111)
+        figura.patch.set_facecolor('#242424')
+        eje.set_facecolor('#1a1a1a')
+        eje.tick_params(colors='white')
         canvas = FigureCanvasTkAgg(figura, master=frame)
         canvas.get_tk_widget().pack(fill="both", expand=True)
         return figura, eje, canvas
 
-    # ========================================================
-    # CIRCUNFERENCIA
-    # ========================================================
+    def configurar_grafico(self, ax, titulo, centro_x=0.0):
+        ax.grid(True, color='#444444')
+        ax.axhline(0, color='white', linewidth=1.2)
+        ax.axvline(0, color='white', linewidth=1.2)
+        ax.set_xlim(centro_x - 10, centro_x + 10)
+        ax.set_ylim(-10, 10)
+        ax.xaxis.set_major_locator(MultipleLocator(2))
+        ax.yaxis.set_major_locator(MultipleLocator(2))
+        ax.set_title(titulo, color='white')
 
-    def crear_circunferencia(self):
-        contenedor = ctk.CTkFrame(self.tab_circunferencia)
+    def generar_coordenadas(self, funcion_str, centro_x=0.0):
+        x_pts, y_pts = [], []
+        x_sym = sp.Symbol('x')
+        try:
+            expr = sp.parse_expr(funcion_str)
+            inicio = centro_x - 10.0
+            for i in range(201):
+                xv = inicio + (i * 0.1)
+                try:
+                    val_y = float(expr.subs(x_sym, xv).evalf())
+                    if abs(val_y) > 40:
+                        y_pts.append(float('nan'))
+                    else:
+                        y_pts.append(val_y)
+                    x_pts.append(xv)
+                except:
+                    x_pts.append(xv)
+                    y_pts.append(float('nan'))
+        except:
+            pass
+        return x_pts, y_pts
+
+    def crear_pestana_infinito(self):
+        contenedor = ctk.CTkFrame(self.tab_infinito)
         contenedor.pack(fill="both", expand=True, padx=10, pady=10)
-
         panel = ctk.CTkFrame(contenedor, width=340)
         panel.pack(side="left", fill="y", padx=10, pady=10)
-
         grafico = ctk.CTkFrame(contenedor)
         grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-        ctk.CTkLabel(panel, text="Circunferencia", font=("Arial", 24, "bold")).pack(pady=15)
+        ctk.CTkLabel(panel, text="Límites al Infinito", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_inf_func = ctk.CTkEntry(panel, width=240)
+        self.ent_inf_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="x tiende a (oo o -oo):").pack()
+        self.ent_inf_tend = ctk.CTkEntry(panel, width=240)
+        self.ent_inf_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_infinito).pack(pady=30)
+        
+        self.lbl_inf_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 24, "bold"), text_color="#2cc983")
+        self.lbl_inf_res.pack(pady=20)
+        
+        self.fig_inf, self.ax_inf, self.canvas_inf = self.crear_canvas(grafico)
 
-        ctk.CTkLabel(panel, text="Centro h:").pack()
-        self.c_h = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.c_h.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Centro k:").pack()
-        self.c_k = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.c_k.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Radio r:").pack()
-        self.c_r = ctk.CTkEntry(panel, placeholder_text="Ej: 3")
-        self.c_r.pack(pady=5)
-
-        ctk.CTkButton(
-            panel,
-            text="Graficar y explicar",
-            command=self.graficar_circunferencia
-        ).pack(pady=20)
-
-        self.resultado_circ = ctk.CTkTextbox(panel, width=310, height=350)
-        self.resultado_circ.pack(pady=10)
-
-        self.fig_circ, self.ax_circ, self.canvas_circ = self.crear_canvas(grafico)
-
-    def graficar_circunferencia(self):
+    def procesar_infinito(self):
         try:
-            h = float(self.c_h.get())
-            k = float(self.c_k.get())
-            r = float(self.c_r.get())
+            func_str = self.ent_inf_func.get()
+            tend_str = self.ent_inf_tend.get()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+            
+            val_x = 1e10 if tend_str == "oo" else -1e10
+            res_num = float(expr.subs(x_sym, val_x).evalf())
+            
+            if res_num > 1e5: res_exacto = "oo"
+            elif res_num < -1e5: res_exacto = "-oo"
+            else: res_exacto = str(sp.nsimplify(res_num, rational=True, tolerance=1e-4))
 
-            if r <= 0:
-                raise ValueError
+            x_pts, y_pts = self.generar_coordenadas(func_str, 0.0)
+            self.ax_inf.clear()
+            self.ax_inf.plot(x_pts, y_pts, color='#3b8ed0', linewidth=2)
+            self.configurar_grafico(self.ax_inf, f"f(x) = {func_str}")
+            self.canvas_inf.draw()
 
-            x = []
-            y = []
+            self.lbl_inf_res.configure(text=f"Resultado: {res_exacto}")
+        except Exception:
+            self.lbl_inf_res.configure(text="Error matemático")
 
-            for i in range(361):
-                angulo = math.radians(i)
-                x.append(h + r * math.cos(angulo))
-                y.append(k + r * math.sin(angulo))
-
-            self.ax_circ.clear()
-            self.ax_circ.plot(x, y)
-            self.ax_circ.scatter([h], [k])
-            self.ax_circ.axhline(0)
-            self.ax_circ.axvline(0)
-            self.ax_circ.grid(True)
-            self.ax_circ.axis("equal")
-            self.ax_circ.set_title("Circunferencia")
-            self.canvas_circ.draw()
-
-            texto = f"""
-Ecuación canónica:
-
-(x - h)² + (y - k)² = r²
-
-Datos:
-
-h = {h}
-k = {k}
-r = {r}
-
-Reemplazo:
-
-(x - {h})² + (y - {k})² = {r}²
-
-Resultado:
-
-(x - {h})² + (y - {k})² = {r ** 2}
-
-Centro:
-
-C({h}, {k})
-
-Radio:
-
-r = {r}
-
-Explicación:
-
-La circunferencia es el conjunto de puntos que están a la misma distancia del centro.
-Esa distancia fija corresponde al radio.
-"""
-            self.mostrar_texto(self.resultado_circ, texto)
-
-        except ValueError:
-            self.mostrar_texto(self.resultado_circ, "Error: ingresa números válidos. El radio debe ser mayor que cero.")
-
-    # ========================================================
-    # ELIPSE
-    # ========================================================
-
-    def crear_elipse(self):
-        contenedor = ctk.CTkFrame(self.tab_elipse)
+    def crear_pestana_trig(self):
+        contenedor = ctk.CTkFrame(self.tab_trig)
         contenedor.pack(fill="both", expand=True, padx=10, pady=10)
-
         panel = ctk.CTkFrame(contenedor, width=340)
         panel.pack(side="left", fill="y", padx=10, pady=10)
-
         grafico = ctk.CTkFrame(contenedor)
         grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-        ctk.CTkLabel(panel, text="Elipse", font=("Arial", 24, "bold")).pack(pady=15)
+        ctk.CTkLabel(panel, text="Límites Trigonométricos", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_trig_func = ctk.CTkEntry(panel, width=240)
+        self.ent_trig_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="x tiende a:").pack()
+        self.ent_trig_tend = ctk.CTkEntry(panel, width=240)
+        self.ent_trig_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_trig).pack(pady=30)
+        
+        self.lbl_trig_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 24, "bold"), text_color="#2cc983")
+        self.lbl_trig_res.pack(pady=20)
+        
+        self.fig_trig, self.ax_trig, self.canvas_trig = self.crear_canvas(grafico)
 
-        ctk.CTkLabel(panel, text="Centro h:").pack()
-        self.e_h = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.e_h.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Centro k:").pack()
-        self.e_k = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.e_k.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Semieje horizontal a:").pack()
-        self.e_a = ctk.CTkEntry(panel, placeholder_text="Ej: 5")
-        self.e_a.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Semieje vertical b:").pack()
-        self.e_b = ctk.CTkEntry(panel, placeholder_text="Ej: 3")
-        self.e_b.pack(pady=5)
-
-        ctk.CTkButton(panel, text="Graficar y explicar", command=self.graficar_elipse).pack(pady=20)
-
-        self.resultado_elipse = ctk.CTkTextbox(panel, width=310, height=350)
-        self.resultado_elipse.pack(pady=10)
-
-        self.fig_elipse, self.ax_elipse, self.canvas_elipse = self.crear_canvas(grafico)
-
-    def graficar_elipse(self):
+    def procesar_trig(self):
         try:
-            h = float(self.e_h.get())
-            k = float(self.e_k.get())
-            a = float(self.e_a.get())
-            b = float(self.e_b.get())
+            func_str = self.ent_trig_func.get()
+            tend_str = self.ent_trig_tend.get()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+            t_val = float(sp.parse_expr(tend_str).evalf())
+            
+            res_num = float(expr.subs(x_sym, t_val + 1e-6).evalf())
+            
+            if res_num > 1e4: res_exacto = "oo"
+            elif res_num < -1e4: res_exacto = "-oo"
+            else: res_exacto = str(sp.nsimplify(res_num, rational=True, tolerance=1e-4))
 
-            if a <= 0 or b <= 0:
-                raise ValueError
+            x_pts, y_pts = self.generar_coordenadas(func_str, t_val)
+            self.ax_trig.clear()
+            self.ax_trig.plot(x_pts, y_pts, color='#2cc983', linewidth=2)
+            self.configurar_grafico(self.ax_trig, f"f(x) = {func_str}", t_val)
+            self.canvas_trig.draw()
 
-            x = []
-            y = []
+            self.lbl_trig_res.configure(text=f"Resultado: {res_exacto}")
+        except Exception:
+            self.lbl_trig_res.configure(text="Error matemático")
 
-            for i in range(361):
-                angulo = math.radians(i)
-                x.append(h + a * math.cos(angulo))
-                y.append(k + b * math.sin(angulo))
+    def crear_pestana_laterales(self):
+        contenedor = ctk.CTkFrame(self.tab_laterales)
+        contenedor.pack(fill="both", expand=True, padx=10, pady=10)
+        panel = ctk.CTkFrame(contenedor, width=340)
+        panel.pack(side="left", fill="y", padx=10, pady=10)
+        grafico = ctk.CTkFrame(contenedor)
+        grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-            if a >= b:
-                orientacion = "horizontal"
-                c = math.sqrt(a ** 2 - b ** 2)
-                f1 = (h - c, k)
-                f2 = (h + c, k)
+        ctk.CTkLabel(panel, text="Límites Laterales", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_lat_func = ctk.CTkEntry(panel, width=240)
+        self.ent_lat_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="Tendencia (ej: 1+ o 1-):").pack()
+        self.ent_lat_tend = ctk.CTkEntry(panel, width=240)
+        self.ent_lat_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_laterales).pack(pady=30)
+        
+        self.lbl_lat_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 20, "bold"), text_color="#2cc983")
+        self.lbl_lat_res.pack(pady=20)
+        
+        self.fig_lat, self.ax_lat, self.canvas_lat = self.crear_canvas(grafico)
+
+    def procesar_laterales(self):
+        try:
+            func_str = self.ent_lat_func.get()
+            tend_str = self.ent_lat_tend.get().strip()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+
+            if tend_str.endswith('+'):
+                num_part = tend_str[:-1]
+                t_val = float(sp.parse_expr(num_part).evalf())
+                res_num = float(expr.subs(x_sym, t_val + 1e-6).evalf())
+                tipo = "Por la Derecha (+)"
+            elif tend_str.endswith('-'):
+                num_part = tend_str[:-1]
+                t_val = float(sp.parse_expr(num_part).evalf())
+                res_num = float(expr.subs(x_sym, t_val - 1e-6).evalf())
+                tipo = "Por la Izquierda (-)"
             else:
-                orientacion = "vertical"
-                c = math.sqrt(b ** 2 - a ** 2)
-                f1 = (h, k - c)
-                f2 = (h, k + c)
+                t_val = float(sp.parse_expr(tend_str).evalf())
+                res_num = float(expr.subs(x_sym, t_val + 1e-6).evalf())
+                tipo = "Por defecto (+)"
 
-            self.ax_elipse.clear()
-            self.ax_elipse.plot(x, y)
-            self.ax_elipse.scatter([h], [k])
-            self.ax_elipse.axhline(0)
-            self.ax_elipse.axvline(0)
-            self.ax_elipse.grid(True)
-            self.ax_elipse.axis("equal")
-            self.ax_elipse.set_title("Elipse")
-            self.canvas_elipse.draw()
+            if res_num > 1e4: 
+                res_exacto = "oo"
+            elif res_num < -1e4: 
+                res_exacto = "-oo"
+            else: 
+                res_exacto = str(sp.nsimplify(res_num, rational=True, tolerance=1e-4))
 
-            texto = f"""
-Ecuación canónica:
+            x_pts, y_pts = self.generar_coordenadas(func_str, t_val)
+            self.ax_lat.clear()
+            self.ax_lat.plot(x_pts, y_pts, color='#d9534f', linewidth=2)
+            self.configurar_grafico(self.ax_lat, f"f(x) = {func_str}", t_val)
+            self.canvas_lat.draw()
 
-(x - h)² / a² + (y - k)² / b² = 1
+            self.lbl_lat_res.configure(text=f"Resultado {tipo}:\n{res_exacto}", text_color="#2cc983")
+        except Exception:
+            self.lbl_lat_res.configure(text="Error matemático", text_color="#d9534f")
 
-Datos:
-
-h = {h}
-k = {k}
-a = {a}
-b = {b}
-
-Reemplazo:
-
-(x - {h})² / {a ** 2} + (y - {k})² / {b ** 2} = 1
-
-Centro:
-
-C({h}, {k})
-
-Orientación:
-
-La elipse es {orientacion}.
-
-Cálculo de focos:
-
-c² = eje mayor² - eje menor²
-c = {round(c, 3)}
-
-Focos:
-
-F1 = {f1}
-F2 = {f2}
-
-Explicación:
-
-La elipse se forma alrededor de un centro.
-Si a es mayor que b, se abre más hacia los lados.
-Si b es mayor que a, se abre más hacia arriba y abajo.
-"""
-            self.mostrar_texto(self.resultado_elipse, texto)
-
-        except ValueError:
-            self.mostrar_texto(self.resultado_elipse, "Error: ingresa números válidos. Los semiejes deben ser mayores que cero.")
-
-    # ========================================================
-    # PARÁBOLA
-    # ========================================================
-
-    def crear_parabola(self):
-        contenedor = ctk.CTkFrame(self.tab_parabola)
+    def crear_pestana_tend_inf(self):
+        contenedor = ctk.CTkFrame(self.tab_tend_inf)
         contenedor.pack(fill="both", expand=True, padx=10, pady=10)
-
         panel = ctk.CTkFrame(contenedor, width=340)
         panel.pack(side="left", fill="y", padx=10, pady=10)
-
         grafico = ctk.CTkFrame(contenedor)
         grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-        ctk.CTkLabel(panel, text="Parábola", font=("Arial", 24, "bold")).pack(pady=15)
+        ctk.CTkLabel(panel, text="Tendencia Infinita", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_tend_func = ctk.CTkEntry(panel, width=240)
+        self.ent_tend_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="x tiende a:").pack()
+        self.ent_tend_tend = ctk.CTkEntry(panel, width=240)
+        self.ent_tend_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_tend_inf).pack(pady=30)
+        
+        self.lbl_tend_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 20, "bold"), text_color="#2cc983")
+        self.lbl_tend_res.pack(pady=20)
+        
+        self.fig_tend, self.ax_tend, self.canvas_tend = self.crear_canvas(grafico)
 
-        ctk.CTkLabel(panel, text="Vértice h:").pack()
-        self.p_h = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.p_h.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Vértice k:").pack()
-        self.p_k = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.p_k.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Parámetro p:").pack()
-        self.p_p = ctk.CTkEntry(panel, placeholder_text="Ej: 2")
-        self.p_p.pack(pady=5)
-
-        self.orientacion_parabola = ctk.CTkOptionMenu(
-            panel,
-            values=["Vertical", "Horizontal"]
-        )
-        self.orientacion_parabola.pack(pady=10)
-
-        ctk.CTkButton(panel, text="Graficar y explicar", command=self.graficar_parabola).pack(pady=20)
-
-        self.resultado_parabola = ctk.CTkTextbox(panel, width=310, height=350)
-        self.resultado_parabola.pack(pady=10)
-
-        self.fig_parabola, self.ax_parabola, self.canvas_parabola = self.crear_canvas(grafico)
-
-    def graficar_parabola(self):
+    def procesar_tend_inf(self):
         try:
-            h = float(self.p_h.get())
-            k = float(self.p_k.get())
-            p = float(self.p_p.get())
+            func_str = self.ent_tend_func.get()
+            tend_str = self.ent_tend_tend.get()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+            t_val = float(sp.parse_expr(tend_str).evalf())
+            
+            izq_num = float(expr.subs(x_sym, t_val - 1e-6).evalf())
+            der_num = float(expr.subs(x_sym, t_val + 1e-6).evalf())
 
-            if p == 0:
-                raise ValueError
+            lim_izq = "oo" if izq_num > 1e4 else ("-oo" if izq_num < -1e4 else str(sp.nsimplify(izq_num, tolerance=1e-3)))
+            lim_der = "oo" if der_num > 1e4 else ("-oo" if der_num < -1e4 else str(sp.nsimplify(der_num, tolerance=1e-3)))
 
-            orientacion = self.orientacion_parabola.get()
+            x_pts, y_pts = self.generar_coordenadas(func_str, t_val)
+            self.ax_tend.clear()
+            self.ax_tend.plot(x_pts, y_pts, color='#f0ad4e', linewidth=2)
+            self.configurar_grafico(self.ax_tend, f"f(x) = {func_str}", t_val)
+            self.ax_tend.axvline(t_val, color='red', linestyle='--')
+            self.canvas_tend.draw()
 
-            x = []
-            y = []
-
-            valores = [i / 10 for i in range(-100, 101)]
-
-            if orientacion == "Vertical":
-                for t in valores:
-                    x_val = h + t
-                    y_val = k + (t ** 2) / (4 * p)
-                    x.append(x_val)
-                    y.append(y_val)
-
-                foco = (h, k + p)
-                directriz = f"y = {k - p}"
-                ecuacion = f"(x - {h})² = {4 * p}(y - {k})"
-
+            if lim_izq == lim_der:
+                self.lbl_tend_res.configure(text=f"Resultado: {lim_izq}")
             else:
-                for t in valores:
-                    y_val = k + t
-                    x_val = h + (t ** 2) / (4 * p)
-                    x.append(x_val)
-                    y.append(y_val)
+                self.lbl_tend_res.configure(text=f"Asíntota Vertical\nIzq: {lim_izq} | Der: {lim_der}")
+        except Exception:
+            self.lbl_tend_res.configure(text="Error matemático")
 
-                foco = (h + p, k)
-                directriz = f"x = {h - p}"
-                ecuacion = f"(y - {k})² = {4 * p}(x - {h})"
-
-            self.ax_parabola.clear()
-            self.ax_parabola.plot(x, y)
-            self.ax_parabola.scatter([h], [k])
-            self.ax_parabola.axhline(0)
-            self.ax_parabola.axvline(0)
-            self.ax_parabola.grid(True)
-            self.ax_parabola.axis("equal")
-            self.ax_parabola.set_title("Parábola")
-            self.canvas_parabola.draw()
-
-            texto = f"""
-Ecuación canónica de la parábola:
-
-Vertical:
-(x - h)² = 4p(y - k)
-
-Horizontal:
-(y - k)² = 4p(x - h)
-
-Datos:
-
-h = {h}
-k = {k}
-p = {p}
-
-Orientación seleccionada:
-
-{orientacion}
-
-Reemplazo:
-
-{ecuacion}
-
-Vértice:
-
-V({h}, {k})
-
-Foco:
-
-F = {foco}
-
-Directriz:
-
-{directriz}
-
-Explicación:
-
-El valor p indica la distancia desde el vértice al foco.
-Si p es positivo, la parábola abre hacia arriba o hacia la derecha.
-Si p es negativo, abre hacia abajo o hacia la izquierda.
-"""
-            self.mostrar_texto(self.resultado_parabola, texto)
-
-        except ValueError:
-            self.mostrar_texto(self.resultado_parabola, "Error: ingresa números válidos. El parámetro p no puede ser cero.")
-
-    # ========================================================
-    # HIPÉRBOLA
-    # ========================================================
-
-    def crear_hiperbola(self):
-        contenedor = ctk.CTkFrame(self.tab_hiperbola)
+    def crear_pestana_radicales(self):
+        contenedor = ctk.CTkFrame(self.tab_radicales)
         contenedor.pack(fill="both", expand=True, padx=10, pady=10)
-
         panel = ctk.CTkFrame(contenedor, width=340)
         panel.pack(side="left", fill="y", padx=10, pady=10)
-
         grafico = ctk.CTkFrame(contenedor)
         grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-        ctk.CTkLabel(panel, text="Hipérbola", font=("Arial", 24, "bold")).pack(pady=15)
+        ctk.CTkLabel(panel, text="Con Radicales", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_rad_func = ctk.CTkEntry(panel, width=240)
+        self.ent_rad_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="x tiende a:").pack()
+        self.ent_rad_tend = ctk.CTkEntry(panel, width=240)
+        self.ent_rad_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_radicales).pack(pady=30)
+        
+        self.lbl_rad_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 24, "bold"), text_color="#2cc983")
+        self.lbl_rad_res.pack(pady=20)
+        
+        self.fig_rad, self.ax_rad, self.canvas_rad = self.crear_canvas(grafico)
 
-        ctk.CTkLabel(panel, text="Centro h:").pack()
-        self.h_h = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.h_h.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Centro k:").pack()
-        self.h_k = ctk.CTkEntry(panel, placeholder_text="Ej: 0")
-        self.h_k.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Semieje a:").pack()
-        self.h_a = ctk.CTkEntry(panel, placeholder_text="Ej: 3")
-        self.h_a.pack(pady=5)
-
-        ctk.CTkLabel(panel, text="Semieje b:").pack()
-        self.h_b = ctk.CTkEntry(panel, placeholder_text="Ej: 2")
-        self.h_b.pack(pady=5)
-
-        self.orientacion_hiperbola = ctk.CTkOptionMenu(
-            panel,
-            values=["Horizontal", "Vertical"]
-        )
-        self.orientacion_hiperbola.pack(pady=10)
-
-        ctk.CTkButton(panel, text="Graficar y explicar", command=self.graficar_hiperbola).pack(pady=20)
-
-        self.resultado_hiperbola = ctk.CTkTextbox(panel, width=310, height=350)
-        self.resultado_hiperbola.pack(pady=10)
-
-        self.fig_hiperbola, self.ax_hiperbola, self.canvas_hiperbola = self.crear_canvas(grafico)
-
-    def graficar_hiperbola(self):
+    def procesar_radicales(self):
         try:
-            h = float(self.h_h.get())
-            k = float(self.h_k.get())
-            a = float(self.h_a.get())
-            b = float(self.h_b.get())
+            func_str = self.ent_rad_func.get()
+            tend_str = self.ent_rad_tend.get()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+            t_val = float(sp.parse_expr(tend_str).evalf())
+            
+            res_num = float(expr.subs(x_sym, t_val + 1e-6).evalf())
+            
+            if res_num > 1e4: res_exacto = "oo"
+            elif res_num < -1e4: res_exacto = "-oo"
+            else: res_exacto = str(sp.nsimplify(res_num, rational=True, tolerance=1e-4))
 
-            if a <= 0 or b <= 0:
-                raise ValueError
+            x_pts, y_pts = self.generar_coordenadas(func_str, t_val)
+            self.ax_rad.clear()
+            self.ax_rad.plot(x_pts, y_pts, color='#bc5090', linewidth=2)
+            self.configurar_grafico(self.ax_rad, f"f(x) = {func_str}", t_val)
+            self.canvas_rad.draw()
 
-            orientacion = self.orientacion_hiperbola.get()
+            self.lbl_rad_res.configure(text=f"Resultado: {res_exacto}")
+        except Exception:
+            self.lbl_rad_res.configure(text="Error matemático")
 
-            x1 = []
-            y1 = []
-            x2 = []
-            y2 = []
+    def crear_pestana_algebraicos(self):
+        contenedor = ctk.CTkFrame(self.tab_algebraicos)
+        contenedor.pack(fill="both", expand=True, padx=10, pady=10)
+        panel = ctk.CTkFrame(contenedor, width=340)
+        panel.pack(side="left", fill="y", padx=10, pady=10)
+        grafico = ctk.CTkFrame(contenedor)
+        grafico.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-            valores = [i / 10 for i in range(-80, 81)]
+        ctk.CTkLabel(panel, text="Indeterminaciones 0/0", font=("Arial", 22, "bold")).pack(pady=30)
+        ctk.CTkLabel(panel, text="Ingresa f(x):").pack()
+        self.ent_alg_func = ctk.CTkEntry(panel, width=240, placeholder_text="(x**3 + x**2 - 5*x + 3)/(x**4 - x**3 - x**2 + x)")
+        self.ent_alg_func.pack(pady=5)
+        ctk.CTkLabel(panel, text="x tiende a (h):").pack()
+        self.ent_alg_tend = ctk.CTkEntry(panel, width=240, placeholder_text="1")
+        self.ent_alg_tend.pack(pady=5)
+        ctk.CTkButton(panel, text="Calcular", command=self.procesar_algebraicos).pack(pady=30)
+        
+        self.lbl_alg_res = ctk.CTkLabel(panel, text="Resultado: -", font=("Arial", 24, "bold"), text_color="#2cc983")
+        self.lbl_alg_res.pack(pady=20)
+        
+        self.fig_alg, self.ax_alg, self.canvas_alg = self.crear_canvas(grafico)
 
-            if orientacion == "Horizontal":
-                for t in valores:
-                    x_der = h + a * math.cosh(t)
-                    y_der = k + b * math.sinh(t)
-                    x_izq = h - a * math.cosh(t)
-                    y_izq = k + b * math.sinh(t)
-
-                    x1.append(x_der)
-                    y1.append(y_der)
-                    x2.append(x_izq)
-                    y2.append(y_izq)
-
-                c = math.sqrt(a ** 2 + b ** 2)
-                f1 = (h - c, k)
-                f2 = (h + c, k)
-                ecuacion = f"(x - {h})² / {a ** 2} - (y - {k})² / {b ** 2} = 1"
-
+    def procesar_algebraicos(self):
+        try:
+            func_str = self.ent_alg_func.get()
+            tend_str = self.ent_alg_tend.get()
+            x_sym = sp.Symbol('x')
+            expr = sp.parse_expr(func_str)
+            t_val = float(sp.parse_expr(tend_str).evalf())
+            
+            delta = 1e-7
+            val_izq = float(expr.subs(x_sym, t_val - delta).evalf())
+            val_der = float(expr.subs(x_sym, t_val + delta).evalf())
+            
+            res_num = (val_izq + val_der) / 2
+            
+            if res_num > 1e4: 
+                res_exacto = "oo"
+            elif res_num < -1e4: 
+                res_exacto = "-oo"
             else:
-                for t in valores:
-                    x_sup = h + b * math.sinh(t)
-                    y_sup = k + a * math.cosh(t)
-                    x_inf = h + b * math.sinh(t)
-                    y_inf = k - a * math.cosh(t)
+                res_exacto = str(sp.nsimplify(res_num, rational=True, tolerance=1e-3))
 
-                    x1.append(x_sup)
-                    y1.append(y_sup)
-                    x2.append(x_inf)
-                    y2.append(y_inf)
+            x_pts, y_pts = self.generar_coordenadas(func_str, t_val)
+            self.ax_alg.clear()
+            self.ax_alg.plot(x_pts, y_pts, color='#2cc983', linewidth=2)
+            self.configurar_grafico(self.ax_alg, f"f(x) = {func_str}", t_val)
+            self.ax_alg.axvline(t_val, color='orange', linestyle=':', alpha=0.6)
+            self.canvas_alg.draw()
 
-                c = math.sqrt(a ** 2 + b ** 2)
-                f1 = (h, k - c)
-                f2 = (h, k + c)
-                ecuacion = f"(y - {k})² / {a ** 2} - (x - {h})² / {b ** 2} = 1"
-
-            self.ax_hiperbola.clear()
-            self.ax_hiperbola.plot(x1, y1)
-            self.ax_hiperbola.plot(x2, y2)
-            self.ax_hiperbola.scatter([h], [k])
-            self.ax_hiperbola.axhline(0)
-            self.ax_hiperbola.axvline(0)
-            self.ax_hiperbola.grid(True)
-            self.ax_hiperbola.axis("equal")
-            self.ax_hiperbola.set_title("Hipérbola")
-            self.canvas_hiperbola.draw()
-
-            texto = f"""
-Ecuación canónica de la hipérbola:
-
-Horizontal:
-(x - h)² / a² - (y - k)² / b² = 1
-
-Vertical:
-(y - k)² / a² - (x - h)² / b² = 1
-
-Datos:
-
-h = {h}
-k = {k}
-a = {a}
-b = {b}
-
-Orientación seleccionada:
-
-{orientacion}
-
-Reemplazo:
-
-{ecuacion}
-
-Centro:
-
-C({h}, {k})
-
-Cálculo de focos:
-
-c² = a² + b²
-c = {round(c, 3)}
-
-Focos:
-
-F1 = {f1}
-F2 = {f2}
-
-Explicación:
-
-La hipérbola tiene dos ramas.
-Si es horizontal, las ramas se abren hacia izquierda y derecha.
-Si es vertical, las ramas se abren hacia arriba y abajo.
-"""
-            self.mostrar_texto(self.resultado_hiperbola, texto)
-
-        except ValueError:
-            self.mostrar_texto(self.resultado_hiperbola, "Error: ingresa números válidos. a y b deben ser mayores que cero.")
-
-    # ========================================================
-    # FUNCIÓN AUXILIAR PARA MOSTRAR TEXTO
-    # ========================================================
-
-    def mostrar_texto(self, caja, texto):
-        caja.configure(state="normal")
-        caja.delete("1.0", "end")
-        caja.insert("1.0", texto)
-        caja.configure(state="disabled")
-
-
-# ============================================================
-# EJECUCIÓN DEL PROGRAMA
-# ============================================================
+            self.lbl_alg_res.configure(text=f"Resultado: {res_exacto}")
+        except Exception:
+            self.lbl_alg_res.configure(text="Error matemático")
 
 if __name__ == "__main__":
     app = App()
