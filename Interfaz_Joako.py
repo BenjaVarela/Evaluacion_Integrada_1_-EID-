@@ -125,8 +125,16 @@ class App(ctk.CTk):
         self.entry_infinito = ctk.CTkEntry(frame_controles, width=220)
         self.entry_infinito.pack(pady=5, padx=20)
         
+        ctk.CTkLabel(frame_controles, text="x tiende a:", font=("Arial", 16)).pack(pady=(10, 5), padx=20, anchor="w")
+        
+        self.entry_x_infinito = ctk.CTkEntry(frame_controles, width=220)
+        self.entry_x_infinito.pack(pady=5, padx=20)
+        
         btn = ctk.CTkButton(frame_controles, text="Graficar", command=self.graficar_infinito)
         btn.pack(pady=15, padx=20)
+        
+        self.resultado_infinito = ctk.CTkTextbox(frame_controles, width=250, height=250)
+        self.resultado_infinito.pack(pady=20, padx=20)
         
         self.fig_inf, self.eje_inf, self.canvas_inf = self.crear_canvas(frame_grafico)
 
@@ -148,9 +156,17 @@ class App(ctk.CTk):
        
         self.entry_trig = ctk.CTkEntry(frame_controles, width=220)
         self.entry_trig.pack(pady=5, padx=20)
+        ctk.CTkLabel(frame_controles,text="x tiende a:",font=("Arial", 16)
+        ).pack(pady=(10, 5), padx=20, anchor="w")
+
+        self.entry_x_trig = ctk.CTkEntry(frame_controles, width=220)
+        self.entry_x_trig.pack(pady=5, padx=20)
         
         btn = ctk.CTkButton(frame_controles, text="Graficar", command=self.graficar_trigonometricos)
         btn.pack(pady=15, padx=20)
+        
+        self.resultado_trig = ctk.CTkTextbox(frame_controles,width=250,height=250)
+        self.resultado_trig.pack(pady=20, padx=20)
         
         self.fig_trig, self.eje_trig, self.canvas_trig = self.crear_canvas(frame_grafico)
 
@@ -171,8 +187,16 @@ class App(ctk.CTk):
         self.entry_lat = ctk.CTkEntry(frame_controles, width=220)
         self.entry_lat.pack(pady=5, padx=20)
         
+        ctk.CTkLabel(frame_controles,text="x tiende a:",font=("Arial", 16)).pack(pady=(10, 5), padx=20, anchor="w")
+
+        self.entry_x_lat = ctk.CTkEntry(frame_controles, width=220)
+        self.entry_x_lat.pack(pady=5, padx=20)
+        
         btn = ctk.CTkButton(frame_controles, text="Graficar", command=self.graficar_laterales)
         btn.pack(pady=15, padx=20)
+        
+        self.resultado_lat = ctk.CTkTextbox(frame_controles,width=250,height=250)
+        self.resultado_lat.pack(pady=20, padx=20)
         
         self.fig_lat, self.eje_lat, self.canvas_lat = self.crear_canvas(frame_grafico)
 
@@ -194,8 +218,16 @@ class App(ctk.CTk):
         self.entry_tend = ctk.CTkEntry(frame_controles, width=220)
         self.entry_tend.pack(pady=5, padx=20)
         
+        ctk.CTkLabel(frame_controles,text="x tiende a:",font=("Arial", 16)).pack(pady=(10, 5), padx=20, anchor="w")
+
+        self.entry_x_tend = ctk.CTkEntry(frame_controles, width=220)
+        self.entry_x_tend.pack(pady=5, padx=20)
+        
         btn = ctk.CTkButton(frame_controles, text="Graficar", command=self.graficar_tendencia)
         btn.pack(pady=15, padx=20)
+        
+        self.resultado_tend = ctk.CTkTextbox(frame_controles,width=250,height=250)
+        self.resultado_tend.pack(pady=20, padx=20)
         
         self.fig_tend, self.eje_tend, self.canvas_tend = self.crear_canvas(frame_grafico)
 
@@ -217,8 +249,16 @@ class App(ctk.CTk):
         self.entry_rad = ctk.CTkEntry(frame_controles, width=220)
         self.entry_rad.pack(pady=5, padx=20)
         
+        ctk.CTkLabel(frame_controles,text="x tiende a:",font=("Arial", 16)).pack(pady=(10, 5), padx=20, anchor="w")
+
+        self.entry_x_rad = ctk.CTkEntry(frame_controles, width=220)
+        self.entry_x_rad.pack(pady=5, padx=20)
+        
         btn = ctk.CTkButton(frame_controles, text="Graficar", command=self.graficar_radicales)
         btn.pack(pady=15, padx=20)
+        
+        self.resultado_rad = ctk.CTkTextbox(frame_controles,width=250,height=250)
+        self.resultado_rad.pack(pady=20, padx=20)
         
         self.fig_rad, self.eje_rad, self.canvas_rad = self.crear_canvas(frame_grafico)
 
@@ -229,3 +269,4 @@ class App(ctk.CTk):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+
